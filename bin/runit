@@ -1,0 +1,2 @@
+colormaps [number of clusters] [input jpg] [output png]
+./colormaps 5 art.jpg out.png
