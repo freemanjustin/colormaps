@@ -14,6 +14,11 @@ int main(int argc, char* argv[]){
 	int		i,j,k;
   int   count;
 
+  char  directory[240];
+  char  fname[240];
+  char  hname[240];
+  struct stat st = {0};
+
   // malloc E;
   E = malloc(sizeof(e));
   if(E==NULL){
@@ -23,7 +28,7 @@ int main(int argc, char* argv[]){
 
   // parse command line arguments
 	if(argc < 4){
-		fprintf(stderr,"args: [n_clusters (int)] [input image file] [output png filename]\n");
+		fprintf(stderr,"args: [n_clusters (int)] [input image file] [output directory name]\n");
     exit(1);
 	}
 	else{
@@ -378,14 +383,23 @@ int main(int argc, char* argv[]){
     */
   }
 
+
+  // create output directory and setup filenames
+  sprintf(directory,"./%s", E->output_file);
+  if (stat(directory, &st) == -1) {
+      mkdir(directory, 0700);
+  }
+
+
   // this block prints colormap information suitable for compiling with jmap
   FILE  *jmap;
-  jmap = fopen("artmap.h","w");
+  sprintf(hname,"%s/%s.h", directory,E->output_file);
+  jmap = fopen(hname,"w");
   if(jmap==NULL){
     fprintf(stderr,"couldn't open output file\n");
     exit(1);
   }
-  fprintf(jmap,"static int cmap_artmap[] = {\n");
+  fprintf(jmap,"static int cmap_artmap_%s[] = {\n", E->output_file);
   for(i=0;i<E->interp_npts-1;i++){
       fprintf(jmap,"%d, ", (int)E->interp_red[i]);
       fprintf(jmap,"%d, ", (int)E->interp_green[i]);
@@ -400,7 +414,9 @@ int main(int argc, char* argv[]){
 
 
   // write out the output image
-  stbi_write_png(E->output_file, E->cm.w, E->cm.h, E->cm.n, (const void *)E->cm.data, 0);
+  sprintf(fname,"%s/%s.png",directory,E->output_file);
+  stbi_write_png(fname, E->cm.w, E->cm.h, E->cm.n, (const void *)E->cm.data, 0);
+
 
   kmeans_free ( E->km );
   // free the image data since we copied it to the km struct
